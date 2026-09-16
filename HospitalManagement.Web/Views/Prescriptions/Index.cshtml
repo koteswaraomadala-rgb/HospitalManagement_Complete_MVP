@@ -1,0 +1,6 @@
+@model List<HospitalManagement.Web.Services.HospitalApiService.PrescriptionApi>
+@{ ViewData["Title"] = "Prescriptions"; }
+<div class="page-title"><div><h1>Prescriptions</h1><p>Recent prescriptions and medication details.</p></div></div>
+<div class="card-panel"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Date</th><th>Patient</th><th>Doctor</th><th>Diagnosis</th><th>Medicines</th></tr></thead><tbody>
+@foreach(var p in Model){<tr><td>@p.createdAt.ToLocalTime().ToString("dd MMM yyyy")</td><td>@p.patient.FirstName @p.patient.LastName</td><td>@p.doctor.Name</td><td>@p.diagnosis</td><td><span class="badge-soft">@p.medicines.Count medicine(s)</span></td></tr>}
+</tbody></table></div></div>

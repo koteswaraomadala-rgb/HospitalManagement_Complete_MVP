@@ -1,0 +1,11 @@
+@model AppointmentViewModel
+@{ ViewData["Title"] = "Book Appointment"; var patients = (List<PatientViewModel>)ViewBag.Patients; var doctors = (List<DoctorViewModel>)ViewBag.Doctors; }
+<div class="page-title"><div><h1>Book Appointment</h1><p>Schedule a patient visit.</p></div><a class="btn btn-light" asp-action="Index">Back</a></div>
+<div class="card-panel form-card"><form method="post"><div class="row g-3">
+<div class="col-md-6"><label>Patient</label><select asp-for="PatientId" class="form-select">@foreach(var p in patients){<option value="@p.Id">@p.PatientNumber - @p.FirstName @p.LastName</option>}</select></div>
+<div class="col-md-6"><label>Doctor</label><select asp-for="DoctorId" class="form-select">@foreach(var d in doctors){<option value="@d.Id">@d.Name (@d.Specialization)</option>}</select></div>
+<div class="col-md-6"><label>Date</label><input asp-for="AppointmentDate" type="date" class="form-control"/></div>
+<div class="col-md-6"><label>Time</label><select asp-for="AppointmentTime" class="form-select"><option>09:00 AM</option><option>10:00 AM</option><option>11:00 AM</option><option>02:00 PM</option><option>04:00 PM</option></select></div>
+<div class="col-md-6"><label>Status</label><select asp-for="Status" class="form-select"><option>Confirmed</option><option>Waiting</option><option>Completed</option><option>Cancelled</option></select></div>
+<div class="col-12"><label>Reason for Visit</label><textarea asp-for="Reason" class="form-control"></textarea></div>
+</div><button class="btn btn-primary mt-4">Book Appointment</button></form></div>

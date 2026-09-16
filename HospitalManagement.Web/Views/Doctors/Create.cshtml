@@ -1,0 +1,11 @@
+@model DoctorViewModel
+@{ ViewData["Title"] = "Add Doctor"; }
+<div class="page-title"><div><h1>Add Doctor</h1><p>Create a doctor profile.</p></div><a class="btn btn-light" asp-action="Index">Back</a></div>
+<div class="card-panel form-card"><form method="post"><div class="row g-3">
+<div class="col-md-6"><label>Name</label><input asp-for="Name" class="form-control"/></div>
+<div class="col-md-6"><label>Specialization</label><input asp-for="Specialization" class="form-control"/></div>
+<div class="col-md-6"><label>Department</label><input asp-for="Department" class="form-control"/></div>
+<div class="col-md-6"><label>Experience Years</label><input asp-for="ExperienceYears" class="form-control"/></div>
+<div class="col-md-6"><label>Phone</label><input asp-for="Phone" class="form-control"/></div>
+<div class="col-md-6"><label>Email</label><input asp-for="Email" class="form-control"/></div>
+</div><button class="btn btn-primary mt-4">Save Doctor</button></form></div>

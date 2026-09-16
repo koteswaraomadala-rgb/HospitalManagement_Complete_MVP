@@ -1,0 +1,28 @@
+@model LoginViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Login";
+}
+<div class="login-page">
+    <div class="login-hero">
+        <div class="hero-overlay">
+            <div class="brand login-brand"><span class="brand-icon">✚</span> MediCare</div>
+            <h1>Care Today<br/>For A Healthier Tomorrow</h1>
+            <p>Trusted healthcare management for your hospital team.</p>
+            <div class="quote">“Good health is the foundation of a brighter tomorrow.”</div>
+        </div>
+    </div>
+    <div class="login-panel">
+        <div class="login-card">
+            <h2>Welcome Back</h2>
+            <p class="text-muted">Sign in to continue to MediCare</p>
+            @if (ViewBag.Error != null) { <div class="alert alert-danger">@ViewBag.Error</div> }
+            <form method="post">
+                <div class="form-floating mb-3"><input asp-for="Username" class="form-control" placeholder="Username"/><label>Username</label></div>
+                <div class="form-floating mb-3"><input asp-for="Password" type="password" class="form-control" placeholder="Password"/><label>Password</label></div>
+                <button class="btn btn-primary w-100 py-3">Sign In</button>
+            </form>
+            <div class="demo-login mt-4">Demo: <b>admin</b> / <b>admin123</b></div>
+        </div>
+    </div>
+</div>

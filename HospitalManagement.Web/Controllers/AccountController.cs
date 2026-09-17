@@ -17,6 +17,7 @@ public class AccountController : Controller
     [HttpPost]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
+        if (!ModelState.IsValid) return View(model);
         var result = await api.LoginAsync(model.Username, model.Password);
         if (!result.ok)
         {

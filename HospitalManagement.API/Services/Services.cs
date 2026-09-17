@@ -39,7 +39,8 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Role, user.Role)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+        var jwtKey = config["Jwt:Key"] ?? throw new InvalidOperationException("JWT key is not configured.");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiry = DateTime.UtcNow.AddMinutes(int.Parse(config["Jwt:ExpiryMinutes"] ?? "120"));
 
@@ -72,7 +73,7 @@ public class PatientService : IPatientService
     {
         var count = await db.Patients.CountAsync();
         var p = new Patient { PatientNumber = $"P{count + 1:0000}", FirstName = r.FirstName, LastName = r.LastName,
-            Gender = r.Gender, DateOfBirth = r.DateOfBirth, Phone = r.Phone, Email = r.Email, Address = r.Address, Status = r.Status };
+            Gender = r.Gender, DateOfBirth = DateTime.SpecifyKind(r.DateOfBirth, DateTimeKind.Utc), Phone = r.Phone, Email = r.Email, Address = r.Address, Status = r.Status };
         db.Patients.Add(p); await db.SaveChangesAsync(); return p;
     }
     public async Task<bool> DeleteAsync(int id)
@@ -114,7 +115,7 @@ public class AppointmentService : IAppointmentService
 
     public async Task<Appointment> CreateAsync(AppointmentRequest r)
     {
-        var a = new Appointment { PatientId = r.PatientId, DoctorId = r.DoctorId, AppointmentDate = r.AppointmentDate,
+        var a = new Appointment { PatientId = r.PatientId, DoctorId = r.DoctorId, AppointmentDate = DateTime.SpecifyKind(r.AppointmentDate, DateTimeKind.Utc),
             AppointmentTime = r.AppointmentTime, Status = r.Status, Reason = r.Reason };
         db.Appointments.Add(a); await db.SaveChangesAsync();
         return await db.Appointments.Include(x => x.Patient).Include(x => x.Doctor).FirstAsync(x => x.Id == a.Id);

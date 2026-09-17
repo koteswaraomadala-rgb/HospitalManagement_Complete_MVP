@@ -1,16 +1,61 @@
 @model DashboardViewModel
 @{ ViewData["Title"] = "Dashboard"; }
-<div class="page-title"><div><h1>Dashboard</h1><p>Overview of today's hospital activity.</p></div></div>
-<div class="stats-grid">
-    <div class="stat-card blue"><span class="stat-icon"><i class="bi bi-people"></i></span><div><small>Total Patients</small><strong>@Model.Patients</strong></div></div>
-    <div class="stat-card green"><span class="stat-icon"><i class="bi bi-person-badge"></i></span><div><small>Total Doctors</small><strong>@Model.Doctors</strong></div></div>
-    <div class="stat-card orange"><span class="stat-icon"><i class="bi bi-calendar-event"></i></span><div><small>Today's Appointments</small><strong>@Model.TodayAppointments</strong></div></div>
-    <div class="stat-card purple"><span class="stat-icon"><i class="bi bi-capsule"></i></span><div><small>Prescriptions</small><strong>@Model.PendingPrescriptions</strong></div></div>
+
+<div class="page-title">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Overview of today's hospital activity.</p>
+    </div>
 </div>
+
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <span class="stat-icon"><i class="bi bi-people"></i></span>
+        <div><small>Total Patients</small><strong>@Model.Patients</strong></div>
+    </div>
+    <div class="stat-card green">
+        <span class="stat-icon"><i class="bi bi-person-badge"></i></span>
+        <div><small>Total Doctors</small><strong>@Model.Doctors</strong></div>
+    </div>
+    <div class="stat-card orange">
+        <span class="stat-icon"><i class="bi bi-calendar-event"></i></span>
+        <div><small>Today's Appointments</small><strong>@Model.TodayAppointments</strong></div>
+    </div>
+    <div class="stat-card purple">
+        <span class="stat-icon"><i class="bi bi-capsule"></i></span>
+        <div><small>Prescriptions</small><strong>@Model.PendingPrescriptions</strong></div>
+    </div>
+</div>
+
 <div class="card-panel mt-4">
-    <div class="panel-head"><h3>Today's Appointments</h3><a asp-controller="Appointments" asp-action="Index">View All</a></div>
+    <div class="panel-head">
+        <h3>Today's Appointments</h3>
+        <a asp-controller="Appointments" asp-action="Index">View All</a>
+    </div>
     <div class="table-responsive">
-    <table class="table align-middle"><thead><tr><th>Time</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Status</th></tr></thead>
-    <tbody>@foreach(var a in Model.Appointments) { <tr><td><b>@a.AppointmentTime</b></td><td>@a.PatientName</td><td>@a.DoctorName</td><td>@a.Reason</td><td><span class="badge-soft">@a.Status</span></td></tr> }</tbody></table>
+        <table class="table align-middle">
+            <thead>
+                <tr><th>Time</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            @if (Model.Appointments != null && Model.Appointments.Any())
+            {
+                foreach (var a in Model.Appointments)
+                {
+                    <tr>
+                        <td><b>@a.AppointmentTime</b></td>
+                        <td>@a.PatientName</td>
+                        <td>@a.DoctorName</td>
+                        <td>@a.Reason</td>
+                        <td><span class="badge-soft">@a.Status</span></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="5" class="text-center py-4 text-muted">No appointments scheduled for today.</td></tr>
+            }
+            </tbody>
+        </table>
     </div>
 </div>

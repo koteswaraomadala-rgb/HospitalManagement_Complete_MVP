@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace HospitalManagement.API.Models;
 
 public class User
@@ -81,4 +79,13 @@ public class PrescriptionMedicine
     public string Frequency { get; set; } = "";
     public string Duration { get; set; } = "";
     public string Instructions { get; set; } = "";
+}
+
+public class AppSetting
+{
+    public int Id { get; set; }
+    public string HospitalName { get; set; } = "MediCare Hospital";
+    public string ContactEmail { get; set; } = "admin@medicare.local";
+    public string ContactPhone { get; set; } = "0000000000";
+    public string Address { get; set; } = "Hospital Address";
 }

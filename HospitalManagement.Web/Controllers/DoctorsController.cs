@@ -1,18 +1,8 @@
-using HospitalManagement.Web.Models;
-using HospitalManagement.Web.Services;
-using Microsoft.AspNetCore.Mvc;
-
+using HospitalManagement.Web.Models; using HospitalManagement.Web.Services; using Microsoft.AspNetCore.Mvc;
 namespace HospitalManagement.Web.Controllers;
-
-public class DoctorsController : Controller
-{
-
-    private readonly HospitalApiService api;
-    public DoctorsController(HospitalApiService api)
-    {
-        this.api = api;
-    }
-    public async Task<IActionResult> Index() => View(await api.DoctorsAsync());
-    [HttpGet] public IActionResult Create() => View(new DoctorViewModel());
-    [HttpPost] public async Task<IActionResult> Create(DoctorViewModel model) { await api.CreateDoctorAsync(model); return RedirectToAction(nameof(Index)); }
-}
+public class DoctorsController:Controller{private readonly HospitalApiService api;public DoctorsController(HospitalApiService api)=>this.api=api;
+[HttpGet]public IActionResult Index()=>View();[HttpGet]public async Task<IActionResult>Get(int id){var r=await api.GetDoctorAsync(id);return r.Ok?Json(new{success=true,data=r.Data}):NotFound(new{message=r.Message});}
+[HttpGet]public IActionResult Create()=>View(new DoctorViewModel());[HttpGet]public IActionResult Edit(int id)=>View("Create",new DoctorViewModel{Id=id});
+[HttpPost][IgnoreAntiforgeryToken]public async Task<IActionResult>List(){var r=await api.DoctorsAsync();return r.Ok?Json(new{success=true,data=r.Data}):StatusCode(502,new{message=r.Message});}
+[HttpPost][IgnoreAntiforgeryToken]public async Task<IActionResult>Save([FromBody]DoctorViewModel model){if(!ModelState.IsValid)return BadRequest(new{message="Please complete all required doctor fields correctly."});var r=model.Id==0?await api.CreateDoctorAsync(model):await api.UpdateDoctorAsync(model.Id,model);return r.Ok?Json(new{success=true,message=model.Id==0?"Doctor added successfully.":"Doctor updated successfully.",data=r.Data}):StatusCode(502,new{message=r.Message});}
+[HttpPost][IgnoreAntiforgeryToken]public async Task<IActionResult>Delete([FromBody]IdRequest request){var r=await api.DeleteDoctorAsync(request.Id);return r.Ok?Json(new{success=true,message="Doctor deleted successfully."}):BadRequest(new{message=r.Message});}}

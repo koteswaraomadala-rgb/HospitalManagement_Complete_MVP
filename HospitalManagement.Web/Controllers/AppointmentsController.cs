@@ -1,26 +1,9 @@
-using HospitalManagement.Web.Models;
-using HospitalManagement.Web.Services;
-using Microsoft.AspNetCore.Mvc;
-
+using HospitalManagement.Web.Models; using HospitalManagement.Web.Services; using Microsoft.AspNetCore.Mvc;
 namespace HospitalManagement.Web.Controllers;
-
-public class AppointmentsController: Controller
-{
-    private readonly HospitalApiService api;
-    public AppointmentsController(HospitalApiService api)
-    {
-        this.api = api;
-    }
-    public async Task<IActionResult> Index() => View(await api.AppointmentsAsync());
-    [HttpGet] public async Task<IActionResult> Create()
-    {
-        ViewBag.Patients = await api.PatientsAsync();
-        ViewBag.Doctors = await api.DoctorsAsync();
-        return View(new AppointmentViewModel { AppointmentDate = DateTime.Today, Status = "Confirmed" });
-    }
-    [HttpPost] public async Task<IActionResult> Create(AppointmentViewModel model)
-    {
-        await api.CreateAppointmentAsync(model);
-        return RedirectToAction(nameof(Index));
-    }
-}
+public class AppointmentsController:Controller{private readonly HospitalApiService api;public AppointmentsController(HospitalApiService api)=>this.api=api;
+[HttpGet]public IActionResult Index()=>View();[HttpGet]public async Task<IActionResult>Get(int id){var r=await api.GetAppointmentAsync(id);return r.Ok?Json(new{success=true,data=r.Data}):NotFound(new{message=r.Message});}
+[HttpGet]public IActionResult Create()=>View(new AppointmentViewModel{AppointmentDate=DateTime.Today,Status="Confirmed"});[HttpGet]public IActionResult Edit(int id)=>View("Create",new AppointmentViewModel{Id=id});
+[HttpPost][IgnoreAntiforgeryToken]public async Task<IActionResult>List([FromBody]SearchRequest request){var r=await api.AppointmentsAsync(request.Search,request.Date);return r.Ok?Json(new{success=true,data=r.Data}):StatusCode(502,new{message=r.Message});}
+[HttpPost][IgnoreAntiforgeryToken]public async Task<IActionResult>Save([FromBody]AppointmentViewModel model){if(!ModelState.IsValid)return BadRequest(new{message="Please complete all required appointment fields correctly."});var r=model.Id==0?await api.CreateAppointmentAsync(model):await api.UpdateAppointmentAsync(model.Id,model);return r.Ok?Json(new{success=true,message=model.Id==0?"Appointment booked successfully.":"Appointment updated successfully.",data=r.Data}):StatusCode(502,new{message=r.Message});}
+[HttpPost][IgnoreAntiforgeryToken]public async Task<IActionResult>Status([FromBody]StatusUpdateViewModel request){if(string.IsNullOrWhiteSpace(request.Status))return BadRequest(new{message="Status is required."});var r=await api.UpdateAppointmentStatusAsync(request.Id,request.Status);return r.Ok?Json(new{success=true,message="Appointment status updated."}):BadRequest(new{message=r.Message});}
+[HttpPost][IgnoreAntiforgeryToken]public async Task<IActionResult>Delete([FromBody]IdRequest request){var r=await api.DeleteAppointmentAsync(request.Id);return r.Ok?Json(new{success=true,message="Appointment deleted successfully."}):BadRequest(new{message=r.Message});}}

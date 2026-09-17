@@ -1,63 +1,46 @@
 # MediCare Hospital Management
 
-A small full-stack hospital management MVP using two independent .NET 10 projects.
+ASP.NET Core 7 MVC + JavaScript/AJAX + ASP.NET Core Web API + EF Core + PostgreSQL.
 
-## Projects
-- `HospitalManagement.API` — ASP.NET Core Web API, EF Core, PostgreSQL, JWT, Swagger.
-- `HospitalManagement.Web` — ASP.NET Core MVC frontend using Razor views and HttpClient.
+## Architecture
 
-## Requirements
-- .NET 10 SDK
-- PostgreSQL 16+
-- Visual Studio 2022/2026 or VS Code
+Browser UI -> JavaScript validation -> AJAX -> Web MVC Controller -> HospitalApiService -> API Controller -> Service Layer -> EF Core -> PostgreSQL -> JSON -> Web Controller -> JavaScript -> UI.
 
-## 1. Create PostgreSQL database
+The same pattern is used for login and the application modules.
 
-Create a database named:
+## Modules
 
-`hospital_management`
+- Login / Logout with JWT authentication and server Session.
+- Dashboard statistics and today's appointments.
+- Patients: list, search, add, edit, delete.
+- Doctors: list, add, edit, delete.
+- Appointments: list, search/filter, book, edit, status update, delete.
+- Prescriptions: list, search, create, delete.
+- Reports: date-range activity summary.
+- Settings: hospital details, profile, password change.
 
-Then update the password in:
+## Run
 
-`HospitalManagement.API/appsettings.json`
+Open `HospitalManagement.sln` in Visual Studio on Mac.
 
-## 2. Run API
+Start both projects together:
 
-From the solution folder:
+- API: https://localhost:7001 (Swagger: `/swagger`)
+- Web: https://localhost:7002
 
-```bash
-dotnet restore
-dotnet run --project HospitalManagement.API
-```
+PostgreSQL must be running on localhost:5432 and the connection string in `HospitalManagement.API/appsettings.json` must match your local PostgreSQL credentials.
 
-The API uses the URL shown by ASP.NET Core, typically HTTPS port 7001 if configured. Update `HospitalManagement.Web/appsettings.json` if your API port differs.
+The API creates the database/tables with `EnsureCreated` and creates a demo user when no users exist.
 
-Swagger:
-`https://localhost:<api-port>/swagger`
+Demo login:
 
-## 3. Run Web
+- Username: `admin`
+- Password: `admin123`
 
-In another terminal:
+## Important security note
 
-```bash
-dotnet run --project HospitalManagement.Web
-```
+The included connection string and JWT key are development values for the local portfolio project. Do not publish real database credentials or production secrets to GitHub. Before making a public repository, replace them with environment variables/user secrets and rotate any credential that has already been exposed.
 
-Open the URL shown in the terminal.
+## .NET note
 
-## Demo accounts
-
-Admin:
-- username: `admin`
-- password: `admin123`
-
-Doctor:
-- username: `doctor`
-- password: `doctor123`
-
-Receptionist:
-- username: `reception`
-- password: `reception123`
-
-## Important
-The sample authentication stores demo passwords as plain text for simplicity. Before production use, replace this with ASP.NET Core Identity or a secure password-hashing implementation, rotate the JWT secret, enable HTTPS-only production configuration, add audit logging, validation, backups, and appropriate healthcare/privacy controls.
+The project targets .NET 7 to remain compatible with the legacy Visual Studio for Mac environment used for this project. .NET 7 is end-of-support and should not be used for a new production deployment.

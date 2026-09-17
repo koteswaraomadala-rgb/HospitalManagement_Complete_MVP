@@ -1,4 +1,1 @@
-@model List<DoctorViewModel>
-@{ ViewData["Title"] = "Doctors"; }
-<div class="page-title"><div><h1>Doctors</h1><p>Hospital doctors and specializations.</p></div><a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> Add Doctor</a></div>
-<div class="doctor-grid">@foreach(var d in Model){<div class="doctor-card"><div class="doctor-avatar"><i class="bi bi-person"></i></div><h3>@d.Name</h3><div class="speciality">@d.Specialization</div><div class="department">@d.Department</div><hr/><div class="doctor-meta"><span><i class="bi bi-award"></i> @d.ExperienceYears years</span><span><i class="bi bi-telephone"></i> @d.Phone</span></div></div>}</div>
+@{ ViewData["Title"]="Doctors"; }<div data-page="doctors"><div class="page-title"><div><h1>Doctors</h1><p>Hospital doctors and specializations.</p></div><a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> Add Doctor</a></div><div id="doctorGrid" class="doctor-grid"></div></div>

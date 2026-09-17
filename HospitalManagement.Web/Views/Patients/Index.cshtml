@@ -1,8 +1,1 @@
-@model List<PatientViewModel>
-@{ ViewData["Title"] = "Patients"; }
-<div class="page-title"><div><h1>Patients</h1><p>Manage patient registrations and records.</p></div><a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> Add Patient</a></div>
-<div class="card-panel">
-<form class="filter-row mb-3"><input name="search" value="@ViewBag.Search" class="form-control" placeholder="Search by name, phone or patient ID"/><button class="btn btn-primary">Search</button></form>
-<div class="table-responsive"><table class="table align-middle"><thead><tr><th>#</th><th>Patient ID</th><th>Name</th><th>Gender</th><th>Phone</th><th>DOB</th><th>Status</th><th></th></tr></thead><tbody>
-@foreach(var p in Model){<tr><td>@p.Id</td><td><b>@p.PatientNumber</b></td><td>@p.FirstName @p.LastName</td><td>@p.Gender</td><td>@p.Phone</td><td>@p.DateOfBirth.ToString("dd MMM yyyy")</td><td><span class="badge-soft">@p.Status</span></td><td><a class="btn btn-sm btn-light" asp-action="Delete" asp-route-id="@p.Id"><i class="bi bi-trash"></i></a></td></tr>}
-</tbody></table></div></div>
+@{ ViewData["Title"]="Patients"; }<div data-page="patients"><div class="page-title"><div><h1>Patients</h1><p>Manage patient registrations and records.</p></div><a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> Add Patient</a></div><div class="card-panel"><form id="patientSearchForm" class="filter-row mb-3"><input id="patientSearch" class="form-control" placeholder="Search by name, phone or patient ID"/><button class="btn btn-primary">Search</button></form><div class="table-responsive"><table class="table align-middle"><thead><tr><th>#</th><th>Patient ID</th><th>Name</th><th>Gender</th><th>Phone</th><th>DOB</th><th>Status</th><th></th></tr></thead><tbody id="patientRows"></tbody></table></div></div></div>

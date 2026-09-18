@@ -44,3 +44,8 @@ The included connection string and JWT key are development values for the local 
 ## .NET note
 
 The project targets .NET 7 to remain compatible with the legacy Visual Studio for Mac environment used for this project. .NET 7 is end-of-support and should not be used for a new production deployment.
+
+## Latest UI/AJAX fix
+- Patient and Doctor creation/editing from the list pages now uses Bootstrap modal forms and AJAX only; clicking Save no longer navigates the browser to `/Patients` or `/Doctors`.
+- Field-level validation errors are returned by the MVC controllers and mapped to the matching input.
+- Add/Edit forms are protected with `preventDefault()` and explicit `type="submit"`/`type="button"` semantics.

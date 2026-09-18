@@ -61,3 +61,15 @@ a{text-decoration:none}
 @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:991px){.login-page{grid-template-columns:1fr}.login-hero{display:none}.login-panel{min-height:100vh}.sidebar{transform:translateX(-100%)!important}.main-content{margin-left:0!important;width:100%!important}.mobile-menu-btn{display:block}.page-content{padding:20px!important}.search-box{width:220px}}
 @media(max-width:576px){.stats-grid{grid-template-columns:1fr}.topbar{padding:0 15px!important}.topbar-user-info{display:none}.page-content{padding:15px!important}.page-title{flex-direction:column}.page-title h1{font-size:23px}.page-title .btn{align-self:flex-start}.login-panel{padding:18px}.login-card{padding:28px 22px}.search-box{display:none}.toast-host{right:12px;left:12px;bottom:12px}.app-toast{max-width:none}}
+
+/* Form validation + AJAX modal polish */
+.field-error{min-height:0;display:block!important;visibility:hidden;opacity:0;max-height:0;overflow:hidden;transition:opacity .15s ease, max-height .15s ease}
+.field-error.visible{visibility:visible;opacity:1;max-height:40px;margin-top:6px!important}
+.modal-content{border-radius:16px!important;overflow:hidden;background:#fff}
+.modal-header{padding:20px 24px;border-bottom:1px solid #edf0f5;background:#fff}
+.modal-header .modal-title{font-size:18px;font-weight:700;color:#172033}
+.modal-body{padding:24px;background:#fff}
+.modal-footer{padding:16px 24px;border-top:1px solid #edf0f5;background:#fff}
+.modal .form-control,.modal .form-select{background:#fff}
+.modal .form-control.is-invalid,.modal .form-select.is-invalid{border-color:#dc3545!important;box-shadow:0 0 0 3px rgba(220,53,69,.08)!important}
+@media(max-width:767px){.modal-dialog{margin:12px}.modal-body{padding:18px}.modal-header,.modal-footer{padding:16px 18px}}

@@ -78,6 +78,23 @@ const app = {
         ok=false;
       }
     });
+    form.querySelectorAll('input[type=tel]').forEach(i=>{
+      const digits=i.value.replace(/\D/g,'');
+      if(i.value && (digits.length<7 || digits.length>15)){
+        i.classList.add('is-invalid');
+        this.fieldError(form,i.name||i.id,'Please enter a valid phone number.');
+        ok=false;
+      }
+    });
+    form.querySelectorAll('input[type=number][min],input[type=number][max]').forEach(i=>{
+      if(i.value==='')return;
+      const n=Number(i.value), min=i.hasAttribute('min')?Number(i.min):-Infinity, max=i.hasAttribute('max')?Number(i.max):Infinity;
+      if(!Number.isFinite(n)||n<min||n>max){
+        i.classList.add('is-invalid');
+        this.fieldError(form,i.name||i.id,`Value must be between ${min} and ${max}.`);
+        ok=false;
+      }
+    });
     return ok;
   }
 };
@@ -92,14 +109,62 @@ document.addEventListener('DOMContentLoaded',()=>{
 function initLogin(){const f=document.getElementById('loginForm');if(!f)return;f.addEventListener('submit',async e=>{e.preventDefault();const err=document.getElementById('loginError');err.textContent='';err.classList.add('d-none');if(!app.validate(f)){return;}const b=f.querySelector('button');app.setBusy(b,true);try{const r=await app.request('/Account/LoginAjax',{method:'POST',body:JSON.stringify({username:f.Username.value.trim(),password:f.Password.value})});location.href=r.redirectUrl;}catch(x){if(x.validationErrors){app.applyServerErrors(f,x);}else{err.textContent=x.message;err.classList.remove('d-none');}}finally{app.setBusy(b,false);}});}
 function initDashboard(){loadDashboard();}
 async function loadDashboard(){try{const r=await app.request('/Dashboard/Data',{method:'POST',body:'{}'});const d=r.data;document.getElementById('statPatients').textContent=d.patients;document.getElementById('statDoctors').textContent=d.doctors;document.getElementById('statAppointments').textContent=d.todayAppointments;document.getElementById('statPrescriptions').textContent=d.pendingPrescriptions;document.getElementById('dashboardRows').innerHTML=d.appointments.map(a=>`<tr><td><b>${app.escape(a.appointmentTime)}</b></td><td>${app.escape(a.patientName)}</td><td>${app.escape(a.doctorName)}</td><td>${app.escape(a.reason)}</td><td><span class="badge-soft">${app.escape(a.status)}</span></td></tr>`).join('')||'<tr><td colspan="5" class="text-center py-4">No appointments scheduled for today.</td></tr>';}catch(e){app.toast(e.message,'error');}}
-async function initPatients(){const search=document.getElementById('patientSearch');document.getElementById('patientSearchForm')?.addEventListener('submit',e=>{e.preventDefault();loadPatients(search.value);});loadPatients('');}
-async function loadPatients(search){try{const r=await app.request('/Patients/List',{method:'POST',body:JSON.stringify({search})});document.getElementById('patientRows').innerHTML=(r.data||[]).map(p=>`<tr><td>${p.id}</td><td><b>${app.escape(p.patientNumber)}</b></td><td>${app.escape(p.firstName)} ${app.escape(p.lastName)}</td><td>${app.escape(p.gender)}</td><td>${app.escape(p.phone)}</td><td>${new Date(p.dateOfBirth).toLocaleDateString('en-GB')}</td><td><span class="badge-soft">${app.escape(p.status)}</span></td><td><a class="btn btn-sm btn-light me-1" href="/Patients/Edit/${p.id}"><i class="bi bi-pencil"></i></a><button class="btn btn-sm btn-light" onclick="deletePatient(${p.id})"><i class="bi bi-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="8" class="text-center py-4">No patients found.</td></tr>';}catch(e){app.toast(e.message,'error');}}
-async function deletePatient(id){if(!confirm('Delete this patient? This cannot be undone.'))return;try{const r=await app.request('/Patients/Delete',{method:'POST',body:JSON.stringify({id})});app.toast(r.message);loadPatients(document.getElementById('patientSearch').value);}catch(e){app.toast(e.message,'error');}}
-async function initPatientForm(){const f=document.getElementById('patientForm');const id=Number(f.dataset.id||0);if(id){try{const r=await app.request(`/Patients/Get/${id}`);fillForm(f,r.data);}catch(e){app.toast(e.message,'error');}}f.addEventListener('submit',async e=>{e.preventDefault();if(!app.validate(f))return;const b=f.querySelector('button');app.setBusy(b,true);try{const r=await app.request('/Patients/Save',{method:'POST',body:JSON.stringify(formObject(f))});app.toast(r.message);setTimeout(()=>location.href='/Patients',500);}catch(x){app.applyServerErrors(f,x);}finally{app.setBusy(b,false);}});}
-async function initDoctors(){loadDoctors();}
-async function loadDoctors(){try{const r=await app.request('/Doctors/List',{method:'POST',body:'{}'});document.getElementById('doctorGrid').innerHTML=(r.data||[]).map(d=>`<div class="doctor-card"><div class="doctor-avatar"><i class="bi bi-person"></i></div><h3>${app.escape(d.name)}</h3><div class="speciality">${app.escape(d.specialization)}</div><div class="department">${app.escape(d.department)}</div><hr/><div class="doctor-meta"><span><i class="bi bi-award"></i> ${d.experienceYears} years</span><span><i class="bi bi-telephone"></i> ${app.escape(d.phone)}</span></div><div class="mt-3"><a class="btn btn-sm btn-light me-1" href="/Doctors/Edit/${d.id}">Edit</a><button class="btn btn-sm btn-light" onclick="deleteDoctor(${d.id})">Delete</button></div></div>`).join('')||'<div class="empty-state">No doctors found.</div>';}catch(e){app.toast(e.message,'error');}}
+async function initPatients(){
+  const search=document.getElementById('patientSearch');
+  document.getElementById('patientSearchForm')?.addEventListener('submit',e=>{e.preventDefault();loadPatients(search?.value||'');});
+  document.getElementById('openPatientModal')?.addEventListener('click',()=>openPatientModal(0));
+  document.getElementById('patientForm')?.addEventListener('submit',savePatientAjax);
+  loadPatients('');
+}
+async function loadPatients(search){
+  try{
+    const r=await app.request('/Patients/List',{method:'POST',body:JSON.stringify({search})});
+    document.getElementById('patientRows').innerHTML=(r.data||[]).map(p=>`<tr><td>${p.id}</td><td><b>${app.escape(p.patientNumber)}</b></td><td>${app.escape(p.firstName)} ${app.escape(p.lastName)}</td><td>${app.escape(p.gender)}</td><td>${app.escape(p.phone)}</td><td>${new Date(p.dateOfBirth).toLocaleDateString('en-GB')}</td><td><span class="badge-soft">${app.escape(p.status)}</span></td><td class="text-nowrap"><button type="button" class="btn btn-sm btn-light me-1" onclick="editPatient(${p.id})"><i class="bi bi-pencil"></i></button><button type="button" class="btn btn-sm btn-light" onclick="deletePatient(${p.id})"><i class="bi bi-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="8" class="text-center py-4">No patients found.</td></tr>';
+  }catch(e){app.toast(e.message,'error');}
+}
+function patientModal(){const el=document.getElementById('patientModal');return el&&window.bootstrap?bootstrap.Modal.getOrCreateInstance(el):null;}
+function resetPatientForm(){const f=document.getElementById('patientForm');if(!f)return;f.reset();f.dataset.id='0';document.getElementById('patientModalTitle').textContent='Add Patient';document.getElementById('patientFormError')?.classList.add('d-none');app.clearValidation(f);const dob=f.querySelector('[name="DateOfBirth"]');if(dob){const d=new Date();d.setFullYear(d.getFullYear()-30);dob.value=d.toISOString().slice(0,10);}const status=f.querySelector('[name="Status"]');if(status)status.value='Active';}
+async function openPatientModal(id){
+  const f=document.getElementById('patientForm');if(!f)return;
+  resetPatientForm();f.dataset.id=String(id||0);
+  if(id){document.getElementById('patientModalTitle').textContent='Edit Patient';try{const r=await app.request(`/Patients/Get/${id}`);fillForm(f,r.data);}catch(e){app.toast(e.message,'error');return;}}
+  patientModal()?.show();
+}
+function editPatient(id){openPatientModal(id);}
+async function savePatientAjax(e){
+  e.preventDefault();e.stopPropagation();
+  const f=e.currentTarget;if(!f)return false;
+  const formError=document.getElementById('patientFormError');formError?.classList.add('d-none');
+  if(!app.validate(f))return false;
+  const b=document.getElementById('savePatientButton');app.setBusy(b,true);
+  try{const r=await app.request('/Patients/Save',{method:'POST',body:JSON.stringify(formObject(f))});app.toast(r.message);patientModal()?.hide();loadPatients(document.getElementById('patientSearch')?.value||'');}
+  catch(x){app.applyServerErrors(f,x);}
+  finally{app.setBusy(b,false);}return false;
+}
+async function deletePatient(id){if(!confirm('Delete this patient? This cannot be undone.'))return;try{const r=await app.request('/Patients/Delete',{method:'POST',body:JSON.stringify({id})});app.toast(r.message);loadPatients(document.getElementById('patientSearch')?.value||'');}catch(e){app.toast(e.message,'error');}}
+async function initDoctors(){
+  document.getElementById('openDoctorModal')?.addEventListener('click',()=>openDoctorModal(0));
+  document.getElementById('doctorForm')?.addEventListener('submit',saveDoctorAjax);
+  loadDoctors();
+}
+async function loadDoctors(){
+  try{const r=await app.request('/Doctors/List',{method:'POST',body:'{}'});document.getElementById('doctorGrid').innerHTML=(r.data||[]).map(d=>`<div class="doctor-card"><div class="doctor-avatar"><i class="bi bi-person"></i></div><h3>${app.escape(d.name)}</h3><div class="speciality">${app.escape(d.specialization)}</div><div class="department">${app.escape(d.department)}</div><hr/><div class="doctor-meta"><span><i class="bi bi-award"></i> ${d.experienceYears} years</span><span><i class="bi bi-telephone"></i> ${app.escape(d.phone)}</span></div><div class="mt-3"><button type="button" class="btn btn-sm btn-light me-1" onclick="editDoctor(${d.id})">Edit</button><button type="button" class="btn btn-sm btn-light" onclick="deleteDoctor(${d.id})">Delete</button></div></div>`).join('')||'<div class="empty-state">No doctors found.</div>';}catch(e){app.toast(e.message,'error');}
+}
+function doctorModal(){const el=document.getElementById('doctorModal');return el&&window.bootstrap?bootstrap.Modal.getOrCreateInstance(el):null;}
+function resetDoctorForm(){const f=document.getElementById('doctorForm');if(!f)return;f.reset();f.dataset.id='0';document.getElementById('doctorModalTitle').textContent='Add Doctor';document.getElementById('doctorFormError')?.classList.add('d-none');app.clearValidation(f);}
+async function openDoctorModal(id){const f=document.getElementById('doctorForm');if(!f)return;resetDoctorForm();f.dataset.id=String(id||0);if(id){document.getElementById('doctorModalTitle').textContent='Edit Doctor';try{const r=await app.request(`/Doctors/Get/${id}`);fillForm(f,r.data);}catch(e){app.toast(e.message,'error');return;}}doctorModal()?.show();}
+function editDoctor(id){openDoctorModal(id);}
+async function saveDoctorAjax(e){
+  e.preventDefault();e.stopPropagation();
+  const f=e.currentTarget;if(!f)return false;
+  document.getElementById('doctorFormError')?.classList.add('d-none');
+  if(!app.validate(f))return false;
+  const b=document.getElementById('saveDoctorButton');app.setBusy(b,true);
+  try{const r=await app.request('/Doctors/Save',{method:'POST',body:JSON.stringify(formObject(f))});app.toast(r.message);doctorModal()?.hide();loadDoctors();}
+  catch(x){app.applyServerErrors(f,x);}
+  finally{app.setBusy(b,false);}return false;
+}
 async function deleteDoctor(id){if(!confirm('Delete this doctor?'))return;try{const r=await app.request('/Doctors/Delete',{method:'POST',body:JSON.stringify({id})});app.toast(r.message);loadDoctors();}catch(e){app.toast(e.message,'error');}}
-async function initDoctorForm(){const f=document.getElementById('doctorForm');const id=Number(f.dataset.id||0);if(id){try{const r=await app.request(`/Doctors/Get/${id}`);fillForm(f,r.data);}catch(e){app.toast(e.message,'error');}}f.addEventListener('submit',async e=>{e.preventDefault();if(!app.validate(f))return;const b=f.querySelector('button');app.setBusy(b,true);try{const r=await app.request('/Doctors/Save',{method:'POST',body:JSON.stringify(formObject(f))});app.toast(r.message);setTimeout(()=>location.href='/Doctors',500);}catch(x){app.applyServerErrors(f,x);}finally{app.setBusy(b,false);}});}
 async function initAppointments(){const f=document.getElementById('appointmentSearchForm');f?.addEventListener('submit',e=>{e.preventDefault();loadAppointments();});document.getElementById('appointmentSearch')?.addEventListener('input',()=>loadAppointments());loadAppointments();}
 async function loadAppointments(){try{const r=await app.request('/Appointments/List',{method:'POST',body:JSON.stringify({search:document.getElementById('appointmentSearch')?.value||'',date:document.getElementById('appointmentDateFilter')?.value||''})});document.getElementById('appointmentRows').innerHTML=(r.data||[]).map(a=>`<tr><td>${new Date(a.appointmentDate).toLocaleDateString('en-GB')}</td><td>${app.escape(a.appointmentTime)}</td><td>${app.escape(a.patientName)}</td><td>${app.escape(a.doctorName)}</td><td>${app.escape(a.reason)}</td><td><select class="form-select form-select-sm" onchange="changeAppointmentStatus(${a.id},this.value)"><option ${a.status==='Confirmed'?'selected':''}>Confirmed</option><option ${a.status==='Waiting'?'selected':''}>Waiting</option><option ${a.status==='Completed'?'selected':''}>Completed</option><option ${a.status==='Cancelled'?'selected':''}>Cancelled</option></select></td><td><a class="btn btn-sm btn-light me-1" href="/Appointments/Edit/${a.id}">Edit</a><button class="btn btn-sm btn-light" onclick="deleteAppointment(${a.id})">Delete</button></td></tr>`).join('')||'<tr><td colspan="7" class="text-center py-4">No appointments found.</td></tr>';}catch(e){app.toast(e.message,'error');}}
 async function changeAppointmentStatus(id,status){try{const r=await app.request('/Appointments/Status',{method:'POST',body:JSON.stringify({id,status})});app.toast(r.message);}catch(e){app.toast(e.message,'error');loadAppointments();}}

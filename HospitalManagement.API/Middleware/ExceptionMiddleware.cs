@@ -5,25 +5,36 @@ namespace HospitalManagement.API.Middleware;
 
 public class ExceptionMiddleware
 {
-    private readonly RequestDelegate next;
-    private readonly ILogger<ExceptionMiddleware> logger;
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionMiddleware> _logger;
 
     public ExceptionMiddleware(
         RequestDelegate next,
         ILogger<ExceptionMiddleware> logger)
     {
-        this.next = next;
-        this.logger = logger;
+        _next = next;
+        _logger = logger;
     }
+
     public async Task InvokeAsync(HttpContext context)
     {
-        try { await next(context); }
-        catch (Exception ex)
+        try
         {
-            logger.LogError(ex, "Unhandled exception");
+            await _next(context);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Unhandled exception");
+
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "An unexpected error occurred." }));
+
+            var response = JsonSerializer.Serialize(new
+            {
+                message = "An unexpected error occurred."
+            });
+
+            await context.Response.WriteAsync(response);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Text;
 using HospitalManagement.API.Data;
 using HospitalManagement.API.Middleware;
 using HospitalManagement.API.Services;
@@ -6,38 +7,48 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database
 builder.Services.AddDbContext<AppDbContext>(options =>
+{
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
-
-// Controllers
-builder.Services.AddControllers(options =>
-{
-    }).ConfigureApiBehaviorOptions(options =>
-{
-    options.InvalidModelStateResponseFactory = context =>
-    {
-        var errors = context.ModelState
-            .Where(x => x.Value != null && x.Value.Errors.Count > 0)
-            .ToDictionary(
-                x => x.Key,
-                x => x.Value!.Errors.Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "Invalid value." : e.ErrorMessage).ToArray());
-        var firstError = errors.Values.SelectMany(x => x).FirstOrDefault() ?? "Validation failed.";
-        return new BadRequestObjectResult(new { message = firstError, errors });
-    };
-}).AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// Services
+builder.Services
+    .AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(item => item.Value != null && item.Value.Errors.Count > 0)
+                .ToDictionary(
+                    item => item.Key,
+                    item => item.Value!.Errors
+                        .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage)
+                            ? "Invalid value."
+                            : error.ErrorMessage)
+                        .ToArray());
+
+            var firstError = errors.Values
+                .SelectMany(messages => messages)
+                .FirstOrDefault() ?? "Validation failed.";
+
+            return new BadRequestObjectResult(new
+            {
+                message = firstError,
+                errors
+            });
+        };
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
@@ -46,13 +57,14 @@ builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 
-// JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "HospitalManagement.API";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "HospitalManagement.Web";
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -61,19 +73,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey)
-            )
+                Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
-builder.Services.AddAuthorization();
 
-// Swagger
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins(
+                "https://localhost:7002",
+                "http://localhost:5002")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -105,14 +125,13 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] { }
+            Array.Empty<string>()
         }
     });
 });
 
 var app = builder.Build();
 
-// Exception handling
 app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -122,19 +141,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
-// Create database/tables
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
-    await db.Database.ExecuteSqlRawAsync("CREATE TABLE IF NOT EXISTS \"AppSettings\" (\"Id\" integer GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, \"HospitalName\" text NOT NULL, \"ContactEmail\" text NOT NULL, \"ContactPhone\" text NOT NULL, \"Address\" text NOT NULL);");
-    await DbSeeder.SeedAsync(db);
+    var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbSeeder.SeedAsync(database);
 }
 
 app.Run();

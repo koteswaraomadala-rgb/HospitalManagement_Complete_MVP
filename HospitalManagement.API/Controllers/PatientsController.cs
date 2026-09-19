@@ -5,13 +5,57 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagement.API.Controllers;
 
-[ApiController, Authorize, Route("api/patients")]
+[ApiController]
+[Authorize]
+[Route("api/patients")]
 public class PatientsController : ControllerBase
 {
-    private readonly IPatientService service; public PatientsController(IPatientService service)=>this.service=service;
-    [HttpGet] public async Task<IActionResult> GetAll([FromQuery]string? search)=>Ok(await service.GetAllAsync(search));
-    [HttpGet("{id:int}")] public async Task<IActionResult> Get(int id)=>await service.GetAsync(id) is { } p?Ok(p):NotFound(new{message="Patient not found."});
-    [HttpPost] public async Task<IActionResult> Create(PatientRequest request)=>Ok(await service.CreateAsync(request));
-    [HttpPut("{id:int}")] public async Task<IActionResult> Update(int id,PatientRequest request)=>await service.UpdateAsync(id,request) is { } p?Ok(p):NotFound(new{message="Patient not found."});
-    [HttpDelete("{id:int}")] public async Task<IActionResult> Delete(int id)=>await service.DeleteAsync(id)?Ok(new{message="Patient deleted successfully."}):NotFound(new{message="Patient not found."});
+    private readonly IPatientService _service;
+
+    public PatientsController(IPatientService service)
+    {
+        _service = service;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] string? search)
+    {
+        return Ok(await _service.GetAllAsync(search));
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var patient = await _service.GetAsync(id);
+
+        return patient == null
+            ? NotFound(new { message = "Patient not found." })
+            : Ok(patient);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(PatientRequest request)
+    {
+        return Ok(await _service.CreateAsync(request));
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, PatientRequest request)
+    {
+        var patient = await _service.UpdateAsync(id, request);
+
+        return patient == null
+            ? NotFound(new { message = "Patient not found." })
+            : Ok(patient);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _service.DeleteAsync(id);
+
+        return deleted
+            ? Ok(new { message = "Patient deleted successfully." })
+            : NotFound(new { message = "Patient not found." });
+    }
 }

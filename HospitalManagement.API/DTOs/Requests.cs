@@ -2,8 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HospitalManagement.API.DTOs;
 
-public record LoginRequest([Required] string Username, [Required] string Password);
-public record LoginResponse(string Token, string FullName, string Role);
+public record LoginRequest(
+    [Required] string Username,
+    [Required] string Password);
+
+public record LoginResponse(
+    string Token,
+    string FullName,
+    string Role);
 
 public record PatientRequest(
     [Required, StringLength(50)] string FirstName,
@@ -31,7 +37,8 @@ public record AppointmentRequest(
     [Required] string Status,
     [Required, StringLength(300)] string Reason);
 
-public record StatusRequest([Required] string Status);
+public record StatusRequest(
+    [Required] string Status);
 
 public record MedicineRequest(
     [Required, StringLength(150)] string MedicineName,
@@ -48,7 +55,22 @@ public record PrescriptionRequest(
     [StringLength(1000)] string Notes,
     [Required, MinLength(1)] List<MedicineRequest> Medicines);
 
-public record ChangePasswordRequest([Required] string CurrentPassword, [Required, MinLength(6)] string NewPassword);
-public record ProfileRequest([Required, StringLength(100)] string FullName, [Required] string Role);
-public record AppSettingResponse(string HospitalName, string ContactEmail, string ContactPhone, string Address);
-public record AppSettingRequest([Required, StringLength(150)] string HospitalName, [EmailAddress] string ContactEmail, [Phone] string ContactPhone, [StringLength(300)] string Address);
+public record ChangePasswordRequest(
+    [Required] string CurrentPassword,
+    [Required, MinLength(6)] string NewPassword);
+
+public record ProfileRequest(
+    [Required, StringLength(100)] string FullName,
+    [Required] string Role);
+
+public record AppSettingResponse(
+    string HospitalName,
+    string ContactEmail,
+    string ContactPhone,
+    string Address);
+
+public record AppSettingRequest(
+    [Required, StringLength(150)] string HospitalName,
+    [EmailAddress] string ContactEmail,
+    [Phone] string ContactPhone,
+    [StringLength(300)] string Address);

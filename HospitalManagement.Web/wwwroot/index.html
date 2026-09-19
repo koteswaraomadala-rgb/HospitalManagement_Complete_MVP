@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediCare Hospital</title>
+    <script src="/js/config.js?v=2"></script>
+</head>
+<body>
+<script>
+    window.location.replace(localStorage.getItem("medicare_token") ? "/dashboard.html" : "/login.html");
+</script>
+</body>
+</html>
